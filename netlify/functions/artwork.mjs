@@ -54,7 +54,7 @@ export default async (request) => {
   return json({
     artwork: {
       ...artwork,
-      sourceUrl: artwork.imageUrl,
+      sourceUrl: `https://www.metmuseum.org/art/collection/search/${artwork.id}`,
     },
   })
 }
