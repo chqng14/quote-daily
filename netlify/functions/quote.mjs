@@ -45,6 +45,10 @@ function json(body, status = 200, cache = 'no-store') {
   })
 }
 
+function quoteKey(text, author) {
+  return `${String(text ?? '').trim().replace(/\\s+/g, ' ').toLowerCase()}|${String(author ?? '').trim().toLowerCase()}`
+}
+
 function hash(value) {
   let h = 2166136261
   for (let i = 0; i < value.length; i += 1) {
@@ -197,7 +201,7 @@ async function quotable(mode, topic) {
   })
 }
 
-function fallback(mode, topic, excludeId = '') {
+function fallback(mode, topic, excludeId = '', excludeKey = '') {
   const pool = topic === 'all' ? localFallback : localFallback.filter((item) => item.topic === topic)
   const normalized = pool.map((item) => normalizedQuote({
     ...item,
@@ -207,7 +211,7 @@ function fallback(mode, topic, excludeId = '') {
     requestedTopic: topic,
   }))
   const candidates = mode === 'random' && normalized.length > 1
-    ? normalized.filter((item) => item.id !== excludeId)
+    ? normalized.filter((item) => item.id !== excludeId && quoteKey(item.text, item.author) !== excludeKey)
     : normalized
   const day = new Date().toISOString().slice(0, 10)
   const index = mode === 'daily'
@@ -228,6 +232,9 @@ export default async (request) => {
   const rawTopic = url.searchParams.get('topic') ?? 'all'
   const topic = TOPICS.has(rawTopic) ? rawTopic : 'all'
   const excludeId = url.searchParams.get('exclude') ?? ''
+  const excludeText = url.searchParams.get('excludeText') ?? ''
+  const excludeAuthor = url.searchParams.get('excludeAuthor') ?? ''
+  const excludeKey = excludeText ? quoteKey(excludeText, excludeAuthor) : ''
 
   const providers = mode === 'daily'
     ? [apiNinjas, theySaidSo, zenQuotes, favQs]
@@ -243,7 +250,10 @@ export default async (request) => {
   for (const provider of attempts) {
     try {
       const quote = await provider(mode, topic)
-      if (mode === 'random' && excludeId && quote.id === excludeId) {
+      if (
+        mode === 'random' &&
+        ((excludeId && quote.id === excludeId) || (excludeKey && quoteKey(quote.text, quote.author) === excludeKey))
+      ) {
         errors.push(`${quote.source} repeated the current quote`)
         continue
       }
@@ -256,6 +266,6 @@ export default async (request) => {
     }
   }
 
-  const quote = fallback(mode, topic, excludeId)
+  const quote = fallback(mode, topic, excludeId, excludeKey)
   return json({ quote, mode, provider: quote.source, fallback: true, errors: process.env.CONTEXT === 'dev' ? errors : undefined })
 }

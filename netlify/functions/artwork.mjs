@@ -1,9 +1,49 @@
-const SEARCH_URL = 'https://collectionapi.metmuseum.org/public/collection/v1.1/search'
-const OBJECT_URL = 'https://collectionapi.metmuseum.org/public/collection/v1/objects'
+const artworks = [
+  {
+    id: '436526',
+    title: 'First Steps, after Millet',
+    artist: 'Vincent van Gogh',
+    date: '1890',
+    imageUrl: 'https://collectionapi.metmuseum.org/api/collection/v1/iiif/436526/794544/main-image',
+    source: 'The Met Open Access',
+  },
+  {
+    id: '438158',
+    title: 'Springtime',
+    artist: 'Pierre-Auguste Cot',
+    date: '1873',
+    imageUrl: 'https://collectionapi.metmuseum.org/api/collection/v1/iiif/438158/2267175/main-image',
+    source: 'The Met Open Access',
+  },
+  {
+    id: '436839',
+    title: 'The Penitent Magdalen',
+    artist: 'Georges de La Tour',
+    date: 'ca. 1640',
+    imageUrl: 'https://collectionapi.metmuseum.org/api/collection/v1/iiif/436839/2186892/main-image',
+    source: 'The Met Open Access',
+  },
+  {
+    id: '437517',
+    title: 'An Early Summer Morning in the Forest of Fontainebleau',
+    artist: 'Théodore Rousseau',
+    date: 'probably 1861',
+    imageUrl: 'https://collectionapi.metmuseum.org/api/collection/v1/iiif/437517/801183/main-image',
+    source: 'The Met Open Access',
+  },
+  {
+    id: '436451',
+    title: 'Tahitian Landscape',
+    artist: 'Paul Gauguin',
+    date: '1892',
+    imageUrl: 'https://collectionapi.metmuseum.org/api/collection/v1/iiif/436451/1857529/main-image',
+    source: 'The Met Open Access',
+  },
+]
 
-function json(body, status = 200) {
+function json(body) {
   return new Response(JSON.stringify(body), {
-    status,
+    status: 200,
     headers: {
       'content-type': 'application/json; charset=utf-8',
       'cache-control': 'no-store',
@@ -11,79 +51,18 @@ function json(body, status = 200) {
   })
 }
 
-async function safeFetch(url) {
-  const controller = new AbortController()
-  const timer = setTimeout(() => controller.abort(), 5000)
+export default async (request) => {
+  const url = new URL(request.url)
+  const exclude = url.searchParams.get('exclude') ?? ''
+  const candidates = artworks.length > 1
+    ? artworks.filter((item) => item.id !== exclude)
+    : artworks
+  const artwork = candidates[Math.floor(Math.random() * candidates.length)] ?? artworks[0]
 
-  try {
-    const response = await fetch(url, { signal: controller.signal })
-    if (!response.ok) throw new Error(`The Met API ${response.status}`)
-    return await response.json()
-  } finally {
-    clearTimeout(timer)
-  }
-}
-
-function searchUrl(offset, limit) {
-  const params = new URLSearchParams({
-    hasImages: 'true',
-    medium: 'Paintings',
-    dateBegin: '1200',
-    dateEnd: '1900',
-    offset: String(offset),
-    limit: String(limit),
+  return json({
+    artwork: {
+      ...artwork,
+      sourceUrl: artwork.imageUrl,
+    },
   })
-  return `${SEARCH_URL}?${params.toString()}`
-}
-
-async function getBatch() {
-  const first = await safeFetch(searchUrl(0, 1))
-  const total = Math.min(Number(first?.total) || 0, 10000)
-  if (!total) throw new Error('The Met returned no paintings')
-
-  const limit = Math.min(10, total)
-  const maxOffset = Math.max(0, total - limit)
-  const offset = Math.floor(Math.random() * (maxOffset + 1))
-  const page = await safeFetch(searchUrl(offset, limit))
-  return page?.objectIDs ?? []
-}
-
-async function loadObject(id) {
-  try {
-    const item = await safeFetch(`${OBJECT_URL}/${id}`)
-    if (!item?.isPublicDomain || !item?.primaryImageSmall) return null
-    return item
-  } catch {
-    return null
-  }
-}
-
-export default async () => {
-  try {
-    let candidates = []
-
-    for (let attempt = 0; attempt < 2 && !candidates.length; attempt += 1) {
-      const ids = await getBatch()
-      const objects = await Promise.all(ids.map(loadObject))
-      candidates = objects.filter(Boolean)
-    }
-
-    if (!candidates.length) throw new Error('No public-domain paintings with images were returned')
-
-    const item = candidates[Math.floor(Math.random() * candidates.length)]
-
-    return json({
-      artwork: {
-        id: String(item.objectID),
-        title: item.title || 'Untitled',
-        artist: item.artistDisplayName || item.culture || 'Unknown artist',
-        date: item.objectDate || '',
-        imageUrl: item.primaryImageSmall,
-        sourceUrl: item.objectURL || `https://www.metmuseum.org/art/collection/search/${item.objectID}`,
-        source: 'The Metropolitan Museum of Art',
-      },
-    })
-  } catch {
-    return json({ error: 'Artwork is temporarily unavailable' }, 503)
-  }
 }

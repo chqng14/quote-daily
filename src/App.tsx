@@ -76,8 +76,8 @@ export default function App() {
 
     try {
       const [nextQuote, nextArtwork] = await Promise.all([
-        getQuote(nextMode, nextTopic, quote.id),
-        getArtwork(),
+        getQuote(nextMode, nextTopic, quote),
+        getArtwork(artwork?.id),
       ])
       setQuote(nextQuote)
       if (nextArtwork) setArtwork(nextArtwork)
@@ -90,7 +90,7 @@ export default function App() {
   async function refreshArtwork() {
     setArtLoading(true)
     try {
-      const nextArtwork = await getArtwork()
+      const nextArtwork = await getArtwork(artwork?.id)
       if (nextArtwork) setArtwork(nextArtwork)
     } finally {
       setArtLoading(false)
@@ -202,9 +202,7 @@ export default function App() {
               </div>
               <figcaption className="artwork-caption">
                 <div>
-                  <a href={artwork.sourceUrl} target="_blank" rel="noreferrer">
-                    <strong>{artwork.title}</strong>
-                  </a>
+                  <strong>{artwork.title}</strong>
                   <span>{artwork.artist}{artwork.date ? ` · ${artwork.date}` : ''}</span>
                 </div>
                 <button className="art-refresh" onClick={() => void refreshArtwork()} disabled={artLoading}>

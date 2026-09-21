@@ -10,32 +10,48 @@ export type Artwork = {
   source: string
 }
 
-function randomLocal(topic: Topic, currentId?: string): Quote {
+function quoteKey(quote: Pick<Quote, 'text' | 'author'>) {
+  return `${quote.text.trim().replace(/\\s+/g, ' ').toLowerCase()}|${quote.author.trim().toLowerCase()}`
+}
+
+function randomLocal(topic: Topic, currentQuote?: Quote): Quote {
   const pool = topic === 'all' ? quotes : quotes.filter((item) => item.topic === topic)
-  const candidates = pool.length > 1 ? pool.filter((item) => item.id !== currentId) : pool
+  const currentKey = currentQuote ? quoteKey(currentQuote) : ''
+  const candidates = pool.length > 1
+    ? pool.filter((item) => quoteKey(item) !== currentKey)
+    : pool
   return candidates[Math.floor(Math.random() * candidates.length)] ?? quotes[0]
 }
 
-export async function getQuote(mode: QuoteMode, topic: Topic, currentId?: string): Promise<Quote> {
+export async function getQuote(mode: QuoteMode, topic: Topic, currentQuote?: Quote): Promise<Quote> {
   try {
     const params = new URLSearchParams({ mode, topic })
-    if (currentId) params.set('exclude', currentId)
-    const response = await fetch(`/.netlify/functions/quote?${params.toString()}`)
+    if (currentQuote) {
+      params.set('exclude', currentQuote.id)
+      params.set('excludeText', currentQuote.text)
+      params.set('excludeAuthor', currentQuote.author)
+    }
+    const response = await fetch(`/.netlify/functions/quote?${params.toString()}`, {
+      cache: mode === 'random' ? 'no-store' : 'default',
+    })
     if (!response.ok) throw new Error(`Quote API ${response.status}`)
     const payload = await response.json() as { quote?: Quote }
     if (!payload.quote?.text || !payload.quote?.author) throw new Error('Invalid quote response')
-    if (mode === 'random' && currentId && payload.quote.id === currentId) {
+    if (mode === 'random' && currentQuote && quoteKey(payload.quote) === quoteKey(currentQuote)) {
       throw new Error('Quote API repeated the current quote')
     }
     return payload.quote
   } catch {
-    return randomLocal(topic, currentId)
+    return randomLocal(topic, currentQuote)
   }
 }
 
-export async function getArtwork(): Promise<Artwork | null> {
+export async function getArtwork(currentId?: string): Promise<Artwork | null> {
   try {
-    const response = await fetch('/.netlify/functions/artwork', { cache: 'no-store' })
+    const params = new URLSearchParams()
+    if (currentId) params.set('exclude', currentId)
+    const suffix = params.toString() ? `?${params.toString()}` : ''
+    const response = await fetch(`/.netlify/functions/artwork${suffix}`, { cache: 'no-store' })
     if (!response.ok) throw new Error(`Artwork API ${response.status}`)
     const payload = await response.json() as { artwork?: Artwork }
     if (!payload.artwork?.imageUrl) throw new Error('Invalid artwork response')
