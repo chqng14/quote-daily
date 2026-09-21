@@ -221,7 +221,7 @@ export default function App() {
       </section>
 
       <footer>
-        <span>Quotes from multiple archives · public-domain paintings from The Met Open Access</span>
+        <span>Quotes from multiple archives · open-access paintings from museum collections</span>
         <span>Lora × Be Vietnam Pro</span>
       </footer>
     </main>
