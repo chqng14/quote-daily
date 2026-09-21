@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { getQuote, getTranslation } from './api'
+import { getArtwork, getQuote, getTranslation, type Artwork } from './api'
 import {
   languageLabels,
   quotes,
@@ -24,35 +24,19 @@ function getInitialLanguage(): Language {
   return 'vi'
 }
 
-function ArtField() {
-  return (
-    <div className="art-field" aria-hidden="true">
-      <span className="art-wash" />
-      <span className="art-sun" />
-      <span className="art-orbit orbit-one" />
-      <span className="art-orbit orbit-two" />
-      <span className="art-brush brush-one" />
-      <span className="art-brush brush-two" />
-      <span className="art-petal petal-one" />
-      <span className="art-petal petal-two" />
-      <span className="art-grid" />
-    </div>
-  )
-}
-
 export default function App() {
   const [language, setLanguage] = useState<Language>(getInitialLanguage)
   const [topic, setTopic] = useState<Topic>('all')
   const [mode, setMode] = useState<QuoteMode>('daily')
   const [quote, setQuote] = useState<Quote>(quotes[0])
+  const [artwork, setArtwork] = useState<Artwork | null>(null)
   const [translation, setTranslation] = useState(quote.translations?.[language] ?? '')
   const [loading, setLoading] = useState(false)
+  const [artLoading, setArtLoading] = useState(false)
   const [translationLoading, setTranslationLoading] = useState(false)
   const [copied, setCopied] = useState(false)
   const requestId = useRef(0)
 
-  const visualTopic = topic === 'all' ? quote.topic : topic
-  const meta = topicMeta[visualTopic]
   const quoteNumber = useMemo(() => {
     let total = 0
     for (const char of quote.id) total = (total + char.charCodeAt(0)) % 99
@@ -80,19 +64,36 @@ export default function App() {
 
   useEffect(() => {
     void loadQuote('daily', 'all')
-    // Initial gallery load only.
+    // Initial load only.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   async function loadQuote(nextMode: QuoteMode, nextTopic: Topic = topic) {
     setLoading(true)
+    setArtLoading(true)
     setCopied(false)
     setMode(nextMode)
+
     try {
-      const next = await getQuote(nextMode, nextTopic, quote.id)
-      setQuote(next)
+      const [nextQuote, nextArtwork] = await Promise.all([
+        getQuote(nextMode, nextTopic, quote.id),
+        getArtwork(),
+      ])
+      setQuote(nextQuote)
+      if (nextArtwork) setArtwork(nextArtwork)
     } finally {
       setLoading(false)
+      setArtLoading(false)
+    }
+  }
+
+  async function refreshArtwork() {
+    setArtLoading(true)
+    try {
+      const nextArtwork = await getArtwork()
+      if (nextArtwork) setArtwork(nextArtwork)
+    } finally {
+      setArtLoading(false)
     }
   }
 
@@ -109,22 +110,19 @@ export default function App() {
   }
 
   return (
-    <main className="page" data-theme={visualTopic}>
-      <ArtField />
-      <div className="grain" aria-hidden="true" />
-
+    <main className="page">
       <header className="masthead">
         <a className="brand" href="/" aria-label="Quote Daily home">
           <span className="brand-mark">Q</span>
           <span className="brand-copy">
             <strong>Quote Daily</strong>
-            <small>Words as a gallery</small>
+            <small>Words beside art</small>
           </span>
         </a>
 
         <div className="header-controls">
-          <button className="today-button" onClick={() => void loadQuote('daily', topic)}>
-            Today’s piece
+          <button className="text-button" onClick={() => void loadQuote('daily', topic)}>
+            Today
           </button>
           <label className="language-control">
             <span>Translation</span>
@@ -141,27 +139,23 @@ export default function App() {
         </div>
       </header>
 
-      <div className="gallery-shell">
-        <aside className="gallery-rail">
-          <div className="rail-label">Collection</div>
-          <nav className="topics" aria-label="Quote topics">
-            {topics.map((item) => (
-              <button
-                key={item}
-                className={item === topic ? 'topic active' : 'topic'}
-                onClick={() => selectTopic(item)}
-              >
-                <span>{topicMeta[item].label}</span>
-                <small>{topicMeta[item].movement}</small>
-              </button>
-            ))}
-          </nav>
-        </aside>
+      <nav className="topics" aria-label="Quote topics">
+        {topics.map((item) => (
+          <button
+            key={item}
+            className={item === topic ? 'topic active' : 'topic'}
+            onClick={() => selectTopic(item)}
+          >
+            {topicMeta[item].label}
+          </button>
+        ))}
+      </nav>
 
-        <section className="quote-stage" aria-live="polite" aria-busy={loading}>
+      <section className="composition">
+        <div className="quote-panel" aria-live="polite" aria-busy={loading}>
           <div className="edition-meta">
             <span>{mode === 'daily' ? 'Daily edition' : 'Open edition'}</span>
-            <span>{meta.movement}</span>
+            <span>{topic === 'all' ? 'All thoughts' : topicMeta[topic].label}</span>
             <span>No. {quoteNumber}</span>
           </div>
 
@@ -187,25 +181,47 @@ export default function App() {
 
           <div className="actions">
             <button className="random-button" onClick={() => void loadQuote('random')} disabled={loading}>
-              <span>{loading ? 'Finding a thought…' : 'Another thought'}</span>
-              <span className="arrow" aria-hidden="true">↗</span>
+              <span>{loading ? 'Finding…' : 'Another thought'}</span>
+              <span aria-hidden="true">↗</span>
             </button>
-            <button className="copy-button" onClick={copyQuote}>{copied ? 'Copied' : 'Copy'}</button>
+            <button className="text-button" onClick={copyQuote}>{copied ? 'Copied' : 'Copy'}</button>
           </div>
+        </div>
 
-          <div className="curatorial-note">
-            <span className="note-number">{quoteNumber}</span>
-            <div>
-              <small>{meta.caption}</small>
-              <p>Each collection changes palette, rhythm and gesture while the words stay at the center.</p>
+        <figure className={artLoading ? 'artwork is-loading' : 'artwork'}>
+          {artwork ? (
+            <>
+              <div className="artwork-frame">
+                <img
+                  key={artwork.id}
+                  src={artwork.imageUrl}
+                  alt={`${artwork.title} by ${artwork.artist}`}
+                  decoding="async"
+                />
+              </div>
+              <figcaption className="artwork-caption">
+                <div>
+                  <a href={artwork.sourceUrl} target="_blank" rel="noreferrer">
+                    <strong>{artwork.title}</strong>
+                  </a>
+                  <span>{artwork.artist}{artwork.date ? ` · ${artwork.date}` : ''}</span>
+                </div>
+                <button className="art-refresh" onClick={() => void refreshArtwork()} disabled={artLoading}>
+                  New art
+                </button>
+              </figcaption>
+            </>
+          ) : (
+            <div className="artwork-frame artwork-placeholder" aria-hidden="true">
+              <span>Art is arriving…</span>
             </div>
-          </div>
-        </section>
-      </div>
+          )}
+        </figure>
+      </section>
 
       <footer>
-        <span>Curated slowly · served from multiple quote archives</span>
-        <span>Typography: Lora × Be Vietnam Pro</span>
+        <span>Quotes from multiple archives · public-domain art from the Art Institute of Chicago</span>
+        <span>Lora × Be Vietnam Pro</span>
       </footer>
     </main>
   )

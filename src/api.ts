@@ -1,5 +1,15 @@
 import { quotes, type Language, type Quote, type QuoteMode, type Topic } from './quotes'
 
+export type Artwork = {
+  id: string
+  title: string
+  artist: string
+  date: string
+  imageUrl: string
+  sourceUrl: string
+  source: string
+}
+
 function randomLocal(topic: Topic, currentId?: string): Quote {
   const pool = topic === 'all' ? quotes : quotes.filter((item) => item.topic === topic)
   const candidates = pool.length > 1 ? pool.filter((item) => item.id !== currentId) : pool
@@ -16,6 +26,18 @@ export async function getQuote(mode: QuoteMode, topic: Topic, currentId?: string
     return payload.quote
   } catch {
     return randomLocal(topic, currentId)
+  }
+}
+
+export async function getArtwork(): Promise<Artwork | null> {
+  try {
+    const response = await fetch('/.netlify/functions/artwork', { cache: 'no-store' })
+    if (!response.ok) throw new Error(`Artwork API ${response.status}`)
+    const payload = await response.json() as { artwork?: Artwork }
+    if (!payload.artwork?.imageUrl) throw new Error('Invalid artwork response')
+    return payload.artwork
+  } catch {
+    return null
   }
 }
 
