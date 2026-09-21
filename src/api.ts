@@ -20,7 +20,7 @@ export async function getQuote(mode: QuoteMode, topic: Topic, currentId?: string
 }
 
 function translationCacheKey(quote: Quote, language: Language) {
-  return `quote-daily:translation:v2:${language}:${quote.id}`
+  return `quote-daily:translation:v3:${language}:${quote.id}`
 }
 
 export async function getTranslation(quote: Quote, language: Language): Promise<string> {
@@ -34,7 +34,12 @@ export async function getTranslation(quote: Quote, language: Language): Promise<
   const response = await fetch('/.netlify/functions/translate', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ text: quote.text, language }),
+    body: JSON.stringify({
+      text: quote.text,
+      language,
+      author: quote.author,
+      topic: quote.topic,
+    }),
   })
   if (!response.ok) throw new Error(`Translation API ${response.status}`)
 
