@@ -46,7 +46,7 @@ function json(body, status = 200, cache = 'no-store') {
 }
 
 function quoteKey(text, author) {
-  return `${String(text ?? '').trim().replace(/\\s+/g, ' ').toLowerCase()}|${String(author ?? '').trim().toLowerCase()}`
+  return `${String(text ?? '').trim().replace(/\s+/g, ' ').toLowerCase()}|${String(author ?? '').trim().toLowerCase()}`
 }
 
 function hash(value) {

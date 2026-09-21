@@ -11,7 +11,7 @@ export type Artwork = {
 }
 
 function quoteKey(quote: Pick<Quote, 'text' | 'author'>) {
-  return `${quote.text.trim().replace(/\\s+/g, ' ').toLowerCase()}|${quote.author.trim().toLowerCase()}`
+  return `${quote.text.trim().replace(/\s+/g, ' ').toLowerCase()}|${quote.author.trim().toLowerCase()}`
 }
 
 function randomLocal(topic: Topic, currentQuote?: Quote): Quote {

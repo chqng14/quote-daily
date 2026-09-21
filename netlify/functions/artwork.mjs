@@ -31,14 +31,6 @@ const artworks = [
     imageUrl: 'https://collectionapi.metmuseum.org/api/collection/v1/iiif/437517/801183/main-image',
     source: 'The Met Open Access',
   },
-  {
-    id: '436451',
-    title: 'Tahitian Landscape',
-    artist: 'Paul Gauguin',
-    date: '1892',
-    imageUrl: 'https://collectionapi.metmuseum.org/api/collection/v1/iiif/436451/1857529/main-image',
-    source: 'The Met Open Access',
-  },
 ]
 
 function json(body) {
