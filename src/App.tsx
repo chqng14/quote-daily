@@ -19,10 +19,11 @@ function getInitialLanguage(): Language {
   if (saved && saved in languageLabels) return saved
 
   const browser = navigator.language.toLowerCase()
+  if (browser.startsWith('en')) return 'en'
   if (browser.startsWith('fr')) return 'fr'
   if (browser.startsWith('es')) return 'es'
   if (browser.startsWith('ja')) return 'ja'
-  return 'vi'
+  return 'en'
 }
 
 function getInitialAutoSeconds() {

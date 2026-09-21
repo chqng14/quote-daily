@@ -1,7 +1,8 @@
-const ALLOWED_LANGUAGES = new Set(['vi', 'fr', 'es', 'ja'])
+const ALLOWED_LANGUAGES = new Set(['en', 'vi', 'fr', 'es', 'ja'])
 const ALLOWED_SOURCE_LANGUAGES = new Set(['en', 'vi'])
 
 const LANGUAGE_NAMES = {
+  en: 'English',
   vi: 'Vietnamese',
   fr: 'French',
   es: 'Spanish',

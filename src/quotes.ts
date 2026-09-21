@@ -1,5 +1,5 @@
 export type Topic = 'all' | 'vietnam' | 'life' | 'love' | 'wisdom' | 'courage' | 'humor'
-export type Language = 'vi' | 'fr' | 'es' | 'ja'
+export type Language = 'en' | 'vi' | 'fr' | 'es' | 'ja'
 export type QuoteMode = 'daily' | 'random'
 
 export type Quote = {
@@ -14,6 +14,7 @@ export type Quote = {
 }
 
 export const languageLabels: Record<Language, string> = {
+  en: 'English',
   vi: 'Tiếng Việt',
   fr: 'Français',
   es: 'Español',
