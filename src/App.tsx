@@ -202,7 +202,9 @@ export default function App() {
               </div>
               <figcaption className="artwork-caption">
                 <div>
-                  <strong>{artwork.title}</strong>
+                  <a href={artwork.sourceUrl} target="_blank" rel="noreferrer">
+                    <strong>{artwork.title}</strong>
+                  </a>
                   <span>{artwork.artist}{artwork.date ? ` · ${artwork.date}` : ''}</span>
                 </div>
                 <button className="art-refresh" onClick={() => void refreshArtwork()} disabled={artLoading}>
