@@ -98,7 +98,7 @@ export const quotes: Quote[] = [
       es: 'Nunca dejes para mañana lo que puede hacerse igual de bien pasado mañana.',
       ja: '明後日でも間に合うことを、明日に延ばしてはいけない。',
     },
-  },,
+  },
   {
     id: 'confucius-simple-life',
     text: 'Life is really simple, but we insist on making it complicated.',
