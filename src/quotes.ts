@@ -1,4 +1,4 @@
-export type Topic = 'all' | 'life' | 'love' | 'wisdom' | 'courage' | 'humor'
+export type Topic = 'all' | 'vietnam' | 'life' | 'love' | 'wisdom' | 'courage' | 'humor'
 export type Language = 'vi' | 'fr' | 'es' | 'ja'
 export type QuoteMode = 'daily' | 'random'
 
@@ -10,6 +10,7 @@ export type Quote = {
   source: string
   sourceUrl?: string
   translations?: Partial<Record<Language, string>>
+  originalLanguage?: 'en' | 'vi'
 }
 
 export const languageLabels: Record<Language, string> = {
@@ -21,6 +22,7 @@ export const languageLabels: Record<Language, string> = {
 
 export const topicMeta: Record<Topic, { label: string; caption: string; movement: string }> = {
   all: { label: 'All thoughts', caption: 'The open collection', movement: 'Atelier study' },
+  vietnam: { label: 'Việt Nam', caption: 'Vietnamese words & art', movement: 'Vietnam collection' },
   life: { label: 'Life', caption: 'Motion, weather, becoming', movement: 'Post-impressionist' },
   love: { label: 'Love', caption: 'Tenderness in ornament', movement: 'Art Nouveau' },
   wisdom: { label: 'Wisdom', caption: 'Silence before the answer', movement: 'Ink & ukiyo-e' },
@@ -168,7 +170,70 @@ export const quotes: Quote[] = [
     author: 'Charlie Chaplin',
     topic: 'humor',
     source: 'Quote Daily collection',
+  },
+  {
+    id: 'vn-nguyen-du-tai-menh',
+    text: 'Trăm năm trong cõi người ta, Chữ tài chữ mệnh khéo là ghét nhau.',
+    author: 'Nguyễn Du',
+    topic: 'vietnam',
+    source: 'Wikisource tiếng Việt',
+    sourceUrl: 'https://vi.wikisource.org/wiki/Truy%E1%BB%87n_Ki%E1%BB%81u',
+    originalLanguage: 'vi',
+  },
+  {
+    id: 'vn-nguyen-du-chu-tam',
+    text: 'Thiện căn ở tại lòng ta, Chữ Tâm kia mới bằng ba chữ tài.',
+    author: 'Nguyễn Du',
+    topic: 'vietnam',
+    source: 'Wikisource tiếng Việt',
+    sourceUrl: 'https://vi.wikisource.org/wiki/Truy%E1%BB%87n_Ki%E1%BB%81u_(b%E1%BA%A3n_Li%E1%BB%85u_V%C4%83n_%C3%90%C6%B0%E1%BB%9Dng_1866)',
+    originalLanguage: 'vi',
+  },
+  {
+    id: 'vn-nguyen-dinh-chieu-lam-on',
+    text: 'Làm ơn há dễ trông người trả ơn?',
+    author: 'Nguyễn Đình Chiểu',
+    topic: 'vietnam',
+    source: 'Lục Vân Tiên · Wikisource',
+    sourceUrl: 'https://vi.wikisource.org/wiki/L%E1%BB%A5c_V%C3%A2n_Ti%C3%AAn_(b%E1%BA%A3n_Qu%E1%BB%91c_ng%E1%BB%AF_2082_c%C3%A2u)/I',
+    originalLanguage: 'vi',
+  },
+  {
+    id: 'vn-nguyen-dinh-chieu-kien-ngai',
+    text: 'Nhớ câu kiến ngãi bất vi, Làm người thế ấy cũng phi anh hùng.',
+    author: 'Nguyễn Đình Chiểu',
+    topic: 'vietnam',
+    source: 'Lục Vân Tiên · Wikisource',
+    sourceUrl: 'https://vi.wikisource.org/wiki/L%E1%BB%A5c_V%C3%A2n_Ti%C3%AAn_(b%E1%BA%A3n_Qu%E1%BB%91c_ng%E1%BB%AF_2082_c%C3%A2u)/I',
+    originalLanguage: 'vi',
+  },
+  {
+    id: 'vn-ho-xuan-huong-long-son',
+    text: 'Rắn nát mặc dầu tay kẻ nặn, Mà em vẫn giữ tấm lòng son.',
+    author: 'Hồ Xuân Hương',
+    topic: 'vietnam',
+    source: 'Bánh trôi nước · Wikisource',
+    sourceUrl: 'https://vi.wikisource.org/wiki/B%C3%A1nh_tr%C3%B4i_n%C6%B0%E1%BB%9Bc',
+    originalLanguage: 'vi',
+  },
+  {
+    id: 'vn-nguyen-binh-khiem-canh-nhan',
+    text: 'Ta dại, ta tìm nơi vắng vẻ, Người khôn, người đến chốn lao xao.',
+    author: 'Nguyễn Bỉnh Khiêm',
+    topic: 'vietnam',
+    source: 'Việt thi · Wikisource',
+    sourceUrl: 'https://vi.wikisource.org/wiki/Trang:Vi%E1%BB%87t_thi.pdf/69',
+    originalLanguage: 'vi',
+  },
+  {
+    id: 'vn-nguyen-binh-khiem-dai-khon',
+    text: 'Khôn mà hiểm độc là khôn dại, Dại vốn hiền lành, ấy dại khôn.',
+    author: 'Nguyễn Bỉnh Khiêm',
+    topic: 'vietnam',
+    source: 'Wikisource tiếng Việt',
+    sourceUrl: 'https://vi.wikisource.org/wiki/Th%C6%A1_v%C3%B4_%C4%91%E1%BB%81_c%E1%BB%A7a_Nguy%E1%BB%85n_B%E1%BB%89nh_Khi%C3%AAm/59',
+    originalLanguage: 'vi',
   }
 ]
 
-export const topics: Topic[] = ['all', 'life', 'love', 'wisdom', 'courage', 'humor']
+export const topics: Topic[] = ['all', 'vietnam', 'life', 'love', 'wisdom', 'courage', 'humor']

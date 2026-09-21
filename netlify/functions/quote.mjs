@@ -1,4 +1,4 @@
-const TOPICS = new Set(['all', 'life', 'love', 'wisdom', 'courage', 'humor'])
+const TOPICS = new Set(['all', 'vietnam', 'life', 'love', 'wisdom', 'courage', 'humor'])
 
 const topicAliases = {
   life: ['life', 'inspirational'],
@@ -35,6 +35,16 @@ const localFallback = [
   { text: 'A day without laughter is a day wasted.', author: 'Charlie Chaplin', topic: 'humor' },
 ]
 
+const vietnamFallback = [
+  { text: 'Trăm năm trong cõi người ta, Chữ tài chữ mệnh khéo là ghét nhau.', author: 'Nguyễn Du', topic: 'vietnam', source: 'Wikisource tiếng Việt', sourceUrl: 'https://vi.wikisource.org/wiki/Truy%E1%BB%87n_Ki%E1%BB%81u', originalLanguage: 'vi' },
+  { text: 'Thiện căn ở tại lòng ta, Chữ Tâm kia mới bằng ba chữ tài.', author: 'Nguyễn Du', topic: 'vietnam', source: 'Wikisource tiếng Việt', sourceUrl: 'https://vi.wikisource.org/wiki/Truy%E1%BB%87n_Ki%E1%BB%81u_(b%E1%BA%A3n_Li%E1%BB%85u_V%C4%83n_%C3%90%C6%B0%E1%BB%9Dng_1866)', originalLanguage: 'vi' },
+  { text: 'Làm ơn há dễ trông người trả ơn?', author: 'Nguyễn Đình Chiểu', topic: 'vietnam', source: 'Lục Vân Tiên · Wikisource', sourceUrl: 'https://vi.wikisource.org/wiki/L%E1%BB%A5c_V%C3%A2n_Ti%C3%AAn_(b%E1%BA%A3n_Qu%E1%BB%91c_ng%E1%BB%AF_2082_c%C3%A2u)/I', originalLanguage: 'vi' },
+  { text: 'Nhớ câu kiến ngãi bất vi, Làm người thế ấy cũng phi anh hùng.', author: 'Nguyễn Đình Chiểu', topic: 'vietnam', source: 'Lục Vân Tiên · Wikisource', sourceUrl: 'https://vi.wikisource.org/wiki/L%E1%BB%A5c_V%C3%A2n_Ti%C3%AAn_(b%E1%BA%A3n_Qu%E1%BB%91c_ng%E1%BB%AF_2082_c%C3%A2u)/I', originalLanguage: 'vi' },
+  { text: 'Rắn nát mặc dầu tay kẻ nặn, Mà em vẫn giữ tấm lòng son.', author: 'Hồ Xuân Hương', topic: 'vietnam', source: 'Bánh trôi nước · Wikisource', sourceUrl: 'https://vi.wikisource.org/wiki/B%C3%A1nh_tr%C3%B4i_n%C6%B0%E1%BB%9Bc', originalLanguage: 'vi' },
+  { text: 'Ta dại, ta tìm nơi vắng vẻ, Người khôn, người đến chốn lao xao.', author: 'Nguyễn Bỉnh Khiêm', topic: 'vietnam', source: 'Việt thi · Wikisource', sourceUrl: 'https://vi.wikisource.org/wiki/Trang:Vi%E1%BB%87t_thi.pdf/69', originalLanguage: 'vi' },
+  { text: 'Khôn mà hiểm độc là khôn dại, Dại vốn hiền lành, ấy dại khôn.', author: 'Nguyễn Bỉnh Khiêm', topic: 'vietnam', source: 'Wikisource tiếng Việt', sourceUrl: 'https://vi.wikisource.org/wiki/Th%C6%A1_v%C3%B4_%C4%91%E1%BB%81_c%E1%BB%A7a_Nguy%E1%BB%85n_B%E1%BB%89nh_Khi%C3%AAm/59', originalLanguage: 'vi' },
+]
+
 function json(body, status = 200, cache = 'no-store') {
   return new Response(JSON.stringify(body), {
     status,
@@ -67,7 +77,7 @@ function normalizeTopic(tags = [], requested = 'all') {
   return 'life'
 }
 
-function normalizedQuote({ text, author, source, sourceUrl, tags = [], requestedTopic = 'all' }) {
+function normalizedQuote({ text, author, source, sourceUrl, tags = [], requestedTopic = 'all', originalLanguage = 'en' }) {
   if (!text || !author) throw new Error(`Invalid quote from ${source}`)
   return {
     id: `${source.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-${hash(`${text}|${author}`)}`,
@@ -76,6 +86,7 @@ function normalizedQuote({ text, author, source, sourceUrl, tags = [], requested
     topic: normalizeTopic(tags, requestedTopic),
     source,
     sourceUrl,
+    originalLanguage,
   }
 }
 
@@ -202,13 +213,15 @@ async function quotable(mode, topic) {
 }
 
 function fallback(mode, topic, excludeId = '', excludeKey = '') {
-  const pool = topic === 'all' ? localFallback : localFallback.filter((item) => item.topic === topic)
+  const basePool = topic === 'vietnam' ? vietnamFallback : localFallback
+  const pool = topic === 'all' ? localFallback : basePool.filter((item) => item.topic === topic)
   const normalized = pool.map((item) => normalizedQuote({
     ...item,
-    source: 'Quote Daily collection',
-    sourceUrl: 'https://www.goodreads.com/quotes',
+    source: item.source ?? 'Quote Daily collection',
+    sourceUrl: item.sourceUrl ?? 'https://www.goodreads.com/quotes',
     tags: [item.topic],
     requestedTopic: topic,
+    originalLanguage: item.originalLanguage ?? 'en',
   }))
   const candidates = mode === 'random' && normalized.length > 1
     ? normalized.filter((item) => item.id !== excludeId && quoteKey(item.text, item.author) !== excludeKey)
@@ -235,6 +248,14 @@ export default async (request) => {
   const excludeText = url.searchParams.get('excludeText') ?? ''
   const excludeAuthor = url.searchParams.get('excludeAuthor') ?? ''
   const excludeKey = excludeText ? quoteKey(excludeText, excludeAuthor) : ''
+
+  if (topic === 'vietnam') {
+    const quote = fallback(mode, topic, excludeId, excludeKey)
+    const cache = mode === 'daily'
+      ? 'public, max-age=300, s-maxage=21600, stale-while-revalidate=86400'
+      : 'no-store'
+    return json({ quote, mode, provider: quote.source }, 200, cache)
+  }
 
   const providers = mode === 'daily'
     ? [apiNinjas, theySaidSo, zenQuotes, favQs]

@@ -12,6 +12,7 @@ import {
 } from './quotes'
 
 const LANGUAGE_KEY = 'quote-daily-language'
+const AUTO_INTERVAL_KEY = 'quote-daily-auto-seconds'
 
 function getInitialLanguage(): Language {
   const saved = localStorage.getItem(LANGUAGE_KEY) as Language | null
@@ -22,6 +23,11 @@ function getInitialLanguage(): Language {
   if (browser.startsWith('es')) return 'es'
   if (browser.startsWith('ja')) return 'ja'
   return 'vi'
+}
+
+function getInitialAutoSeconds() {
+  const saved = Number(localStorage.getItem(AUTO_INTERVAL_KEY))
+  return [15, 30, 60, 120, 300].includes(saved) ? saved : 30
 }
 
 export default function App() {
@@ -35,6 +41,8 @@ export default function App() {
   const [artLoading, setArtLoading] = useState(false)
   const [translationLoading, setTranslationLoading] = useState(false)
   const [copied, setCopied] = useState(false)
+  const [autoEnabled, setAutoEnabled] = useState(false)
+  const [autoSeconds, setAutoSeconds] = useState(getInitialAutoSeconds)
   const requestId = useRef(0)
 
   const quoteNumber = useMemo(() => {
@@ -48,7 +56,18 @@ export default function App() {
   }, [language])
 
   useEffect(() => {
+    localStorage.setItem(AUTO_INTERVAL_KEY, String(autoSeconds))
+  }, [autoSeconds])
+
+  useEffect(() => {
     const id = ++requestId.current
+    const sourceLanguage = quote.originalLanguage ?? 'en'
+    if (sourceLanguage === language) {
+      setTranslation('')
+      setTranslationLoading(false)
+      return
+    }
+
     setTranslationLoading(true)
     getTranslation(quote, language)
       .then((text) => {
@@ -68,6 +87,16 @@ export default function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  useEffect(() => {
+    if (!autoEnabled || loading) return
+
+    const timer = window.setTimeout(() => {
+      if (!document.hidden) void loadQuote('random', topic)
+    }, autoSeconds * 1000)
+
+    return () => window.clearTimeout(timer)
+  }, [autoEnabled, autoSeconds, topic, quote.id, artwork?.id, loading])
+
   async function loadQuote(nextMode: QuoteMode, nextTopic: Topic = topic) {
     setLoading(true)
     setArtLoading(true)
@@ -77,10 +106,10 @@ export default function App() {
     try {
       const [nextQuote, nextArtwork] = await Promise.all([
         getQuote(nextMode, nextTopic, quote),
-        getArtwork(artwork?.id),
+        getArtwork(artwork?.id, nextTopic),
       ])
       setQuote(nextQuote)
-      if (nextArtwork) setArtwork(nextArtwork)
+      setArtwork(nextArtwork)
     } finally {
       setLoading(false)
       setArtLoading(false)
@@ -90,7 +119,7 @@ export default function App() {
   async function refreshArtwork() {
     setArtLoading(true)
     try {
-      const nextArtwork = await getArtwork(artwork?.id)
+      const nextArtwork = await getArtwork(artwork?.id, topic)
       if (nextArtwork) setArtwork(nextArtwork)
     } finally {
       setArtLoading(false)
@@ -124,6 +153,30 @@ export default function App() {
           <button className="text-button" onClick={() => void loadQuote('daily', topic)}>
             Today
           </button>
+          <div className="auto-controls">
+            <button
+              className={autoEnabled ? 'auto-toggle is-on' : 'auto-toggle'}
+              type="button"
+              aria-pressed={autoEnabled}
+              onClick={() => setAutoEnabled((value) => !value)}
+            >
+              Auto {autoEnabled ? 'On' : 'Off'}
+            </button>
+            <label className="auto-time">
+              <span>Every</span>
+              <select
+                value={autoSeconds}
+                onChange={(event) => setAutoSeconds(Number(event.target.value))}
+                aria-label="Auto change interval"
+              >
+                <option value={15}>15s</option>
+                <option value={30}>30s</option>
+                <option value={60}>60s</option>
+                <option value={120}>2m</option>
+                <option value={300}>5m</option>
+              </select>
+            </label>
+          </div>
           <label className="language-control">
             <span>Translation</span>
             <select
@@ -160,12 +213,14 @@ export default function App() {
           </div>
 
           <figure key={quote.id} className={loading ? 'quote is-loading' : 'quote'}>
-            <blockquote>“{quote.text}”</blockquote>
+            <blockquote lang={quote.originalLanguage ?? 'en'}>“{quote.text}”</blockquote>
 
-            <div className={translationLoading ? 'translation is-loading' : 'translation'} lang={language}>
-              <span className="translation-mark">↳</span>
-              <span>{translation}</span>
-            </div>
+            {(translationLoading || translation) && (
+              <div className={translationLoading ? 'translation is-loading' : 'translation'} lang={language}>
+                <span className="translation-mark">↳</span>
+                <span>{translationLoading && !translation ? 'Translating…' : translation}</span>
+              </div>
+            )}
 
             <figcaption>
               <span className="caption-line" />

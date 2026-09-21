@@ -46,10 +46,11 @@ export async function getQuote(mode: QuoteMode, topic: Topic, currentQuote?: Quo
   }
 }
 
-export async function getArtwork(currentId?: string): Promise<Artwork | null> {
+export async function getArtwork(currentId?: string, topic: Topic = 'all'): Promise<Artwork | null> {
   try {
     const params = new URLSearchParams()
     if (currentId) params.set('exclude', currentId)
+    params.set('topic', topic)
     const suffix = params.toString() ? `?${params.toString()}` : ''
     const response = await fetch(`/.netlify/functions/artwork${suffix}`, { cache: 'no-store' })
     if (!response.ok) throw new Error(`Artwork API ${response.status}`)
@@ -62,10 +63,13 @@ export async function getArtwork(currentId?: string): Promise<Artwork | null> {
 }
 
 function translationCacheKey(quote: Quote, language: Language) {
-  return `quote-daily:translation:v3:${language}:${quote.id}`
+  return `quote-daily:translation:v4:${language}:${quote.id}`
 }
 
 export async function getTranslation(quote: Quote, language: Language): Promise<string> {
+  const sourceLanguage = quote.originalLanguage ?? 'en'
+  if (sourceLanguage === language) return ''
+
   const curated = quote.translations?.[language]
   if (curated) return curated
 
@@ -81,6 +85,7 @@ export async function getTranslation(quote: Quote, language: Language): Promise<
       language,
       author: quote.author,
       topic: quote.topic,
+      sourceLanguage,
     }),
   })
   if (!response.ok) throw new Error(`Translation API ${response.status}`)

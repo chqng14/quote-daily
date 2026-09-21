@@ -79,6 +79,33 @@ function normalizeCleveland(item) {
   }
 }
 
+async function randomVietnamCleveland(exclude) {
+  const makeParams = (mode) => {
+    const params = new URLSearchParams({
+      has_image: '1',
+      limit: '100',
+    })
+    params.append('cc0', '')
+    if (mode === 'culture') params.set('culture', 'Vietnam')
+    else params.set('q', 'Vietnam')
+    return params
+  }
+
+  for (const mode of ['culture', 'query']) {
+    const data = await fetchJson(`https://openaccess-api.clevelandart.org/api/artworks/?${makeParams(mode).toString()}`)
+    const candidates = (data?.data ?? [])
+      .map(normalizeCleveland)
+      .filter(Boolean)
+      .filter((item) => item.id !== exclude)
+
+    if (candidates.length) {
+      return candidates[Math.floor(Math.random() * candidates.length)]
+    }
+  }
+
+  throw new Error('No Vietnamese open-access artwork found')
+}
+
 async function randomCleveland(exclude) {
   // CMA documents ~3,200 CC0 paintings with images. Keeping the upper bound
   // below that count avoids an extra "count" request on every click.
@@ -109,6 +136,16 @@ function randomMetFallback(exclude) {
 export default async (request) => {
   const url = new URL(request.url)
   const exclude = url.searchParams.get('exclude') ?? ''
+  const topic = url.searchParams.get('topic') ?? 'all'
+
+  if (topic === 'vietnam') {
+    try {
+      const artwork = await randomVietnamCleveland(exclude)
+      return json({ artwork })
+    } catch {
+      return json({ artwork: null, vietnam: true }, 200)
+    }
+  }
 
   try {
     const artwork = await randomCleveland(exclude)

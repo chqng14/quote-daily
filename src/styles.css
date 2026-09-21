@@ -71,7 +71,54 @@ button:focus-visible, select:focus-visible, a:focus-visible { outline: 2px solid
 .header-controls {
   display: flex;
   align-items: center;
-  gap: 22px;
+  gap: 20px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.auto-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.auto-toggle,
+.auto-time {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: .13em;
+}
+
+.auto-toggle {
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  padding: 7px 0 5px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.auto-toggle.is-on {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
+.auto-time {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--muted);
+}
+
+.auto-time select {
+  appearance: none;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  border-radius: 0;
+  background: transparent;
+  color: var(--ink);
+  padding: 7px 4px 7px 0;
+  cursor: pointer;
 }
 
 .text-button,
@@ -384,7 +431,8 @@ footer {
   .page { padding: 20px 16px 18px; }
 
   .brand-copy small,
-  .language-control > span {
+  .language-control > span,
+  .auto-time > span {
     display: none;
   }
 
