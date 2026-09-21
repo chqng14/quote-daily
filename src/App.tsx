@@ -197,6 +197,7 @@ export default function App() {
                   src={artwork.imageUrl}
                   alt={`${artwork.title} by ${artwork.artist}`}
                   decoding="async"
+                  referrerPolicy="no-referrer"
                 />
               </div>
               <figcaption className="artwork-caption">
@@ -220,7 +221,7 @@ export default function App() {
       </section>
 
       <footer>
-        <span>Quotes from multiple archives · public-domain art from the Art Institute of Chicago</span>
+        <span>Quotes from multiple archives · public-domain paintings from The Met Open Access</span>
         <span>Lora × Be Vietnam Pro</span>
       </footer>
     </main>

@@ -83,3 +83,8 @@ Content-Type: application/json
 ## Goodreads
 
 Goodreads remains a discovery/reference source for manually curated entries only. The production app does not scrape Goodreads automatically.
+
+
+## Artwork source
+
+Random artwork is loaded through a Netlify Function from The Metropolitan Museum of Art Open Access API. The function uses the current paginated v1.1 search endpoint, requests paintings with images from 1200–1900, and only returns objects whose API record marks them as public domain and provides a `primaryImageSmall` URL.

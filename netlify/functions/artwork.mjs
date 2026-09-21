@@ -1,61 +1,86 @@
-function json(body, status = 200, cache = 'no-store') {
+const SEARCH_URL = 'https://collectionapi.metmuseum.org/public/collection/v1.1/search'
+const OBJECT_URL = 'https://collectionapi.metmuseum.org/public/collection/v1/objects'
+
+function json(body, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
     headers: {
       'content-type': 'application/json; charset=utf-8',
-      'cache-control': cache,
+      'cache-control': 'no-store',
     },
   })
 }
 
-async function fetchArtworks(page) {
-  const params = new URLSearchParams({
-    q: 'painting',
-    limit: '24',
-    page: String(page),
-    fields: 'id,title,image_id,artist_title,date_display,is_public_domain',
-  })
-  params.set('query[term][is_public_domain]', 'true')
-
+async function safeFetch(url) {
   const controller = new AbortController()
-  const timer = setTimeout(() => controller.abort(), 4500)
+  const timer = setTimeout(() => controller.abort(), 5000)
 
   try {
-    const response = await fetch(`https://api.artic.edu/api/v1/artworks/search?${params.toString()}`, {
-      signal: controller.signal,
-    })
-    if (!response.ok) throw new Error(`Art Institute ${response.status}`)
+    const response = await fetch(url, { signal: controller.signal })
+    if (!response.ok) throw new Error(`The Met API ${response.status}`)
     return await response.json()
   } finally {
     clearTimeout(timer)
   }
 }
 
+function searchUrl(offset, limit) {
+  const params = new URLSearchParams({
+    hasImages: 'true',
+    medium: 'Paintings',
+    dateBegin: '1200',
+    dateEnd: '1900',
+    offset: String(offset),
+    limit: String(limit),
+  })
+  return `${SEARCH_URL}?${params.toString()}`
+}
+
+async function getBatch() {
+  const first = await safeFetch(searchUrl(0, 1))
+  const total = Math.min(Number(first?.total) || 0, 10000)
+  if (!total) throw new Error('The Met returned no paintings')
+
+  const limit = Math.min(10, total)
+  const maxOffset = Math.max(0, total - limit)
+  const offset = Math.floor(Math.random() * (maxOffset + 1))
+  const page = await safeFetch(searchUrl(offset, limit))
+  return page?.objectIDs ?? []
+}
+
+async function loadObject(id) {
+  try {
+    const item = await safeFetch(`${OBJECT_URL}/${id}`)
+    if (!item?.isPublicDomain || !item?.primaryImageSmall) return null
+    return item
+  } catch {
+    return null
+  }
+}
+
 export default async () => {
   try {
-    const page = 1 + Math.floor(Math.random() * 30)
-    let data = await fetchArtworks(page)
-    let candidates = (data?.data ?? []).filter((item) => item?.image_id && item?.is_public_domain === true)
+    let candidates = []
 
-    if (!candidates.length) {
-      data = await fetchArtworks(1)
-      candidates = (data?.data ?? []).filter((item) => item?.image_id && item?.is_public_domain === true)
+    for (let attempt = 0; attempt < 2 && !candidates.length; attempt += 1) {
+      const ids = await getBatch()
+      const objects = await Promise.all(ids.map(loadObject))
+      candidates = objects.filter(Boolean)
     }
 
     if (!candidates.length) throw new Error('No public-domain paintings with images were returned')
 
     const item = candidates[Math.floor(Math.random() * candidates.length)]
-    const iiif = data?.config?.iiif_url || 'https://www.artic.edu/iiif/2'
 
     return json({
       artwork: {
-        id: String(item.id),
+        id: String(item.objectID),
         title: item.title || 'Untitled',
-        artist: item.artist_title || 'Unknown artist',
-        date: item.date_display || '',
-        imageUrl: `${iiif}/${item.image_id}/full/843,/0/default.jpg`,
-        sourceUrl: `https://www.artic.edu/artworks/${item.id}`,
-        source: 'Art Institute of Chicago',
+        artist: item.artistDisplayName || item.culture || 'Unknown artist',
+        date: item.objectDate || '',
+        imageUrl: item.primaryImageSmall,
+        sourceUrl: item.objectURL || `https://www.metmuseum.org/art/collection/search/${item.objectID}`,
+        source: 'The Metropolitan Museum of Art',
       },
     })
   } catch {
