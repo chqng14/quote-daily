@@ -1,0 +1,336 @@
+:root {
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: #1c1b18;
+  background: #f1eee6;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+}
+
+* { box-sizing: border-box; }
+
+html, body, #root { min-height: 100%; }
+
+body {
+  margin: 0;
+  min-width: 320px;
+  background: #f1eee6;
+}
+
+button, select { font: inherit; }
+
+button, a { -webkit-tap-highlight-color: transparent; }
+
+a { color: inherit; }
+
+.page {
+  position: relative;
+  min-height: 100vh;
+  overflow: hidden;
+  padding: 34px 44px 28px;
+  display: grid;
+  grid-template-rows: auto auto 1fr auto;
+  isolation: isolate;
+}
+
+.page::before {
+  content: "";
+  position: absolute;
+  width: 46vw;
+  height: 46vw;
+  max-width: 720px;
+  max-height: 720px;
+  border-radius: 50%;
+  right: -16vw;
+  top: 5vh;
+  border: 1px solid rgba(28, 27, 24, .12);
+  z-index: -2;
+}
+
+.page::after {
+  content: "“";
+  position: absolute;
+  left: -2vw;
+  bottom: -18vw;
+  font-family: Georgia, serif;
+  font-size: min(62vw, 820px);
+  line-height: .7;
+  color: rgba(114, 76, 55, .055);
+  z-index: -2;
+}
+
+.grain {
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  opacity: .13;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.95' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.16'/%3E%3C/svg%3E");
+  mix-blend-mode: multiply;
+}
+
+.masthead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 11px;
+  text-decoration: none;
+  text-transform: uppercase;
+  font-size: 11px;
+  letter-spacing: .16em;
+  font-weight: 650;
+}
+
+.brand-mark {
+  width: 34px;
+  height: 34px;
+  border: 1px solid #1c1b18;
+  display: grid;
+  place-items: center;
+  font-family: Georgia, serif;
+  font-size: 18px;
+  transform: rotate(-4deg);
+}
+
+.language-control {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #6d6960;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: .12em;
+}
+
+.language-control select {
+  appearance: none;
+  border: 0;
+  border-bottom: 1px solid #aaa59b;
+  border-radius: 0;
+  color: #1c1b18;
+  background: transparent;
+  padding: 6px 20px 6px 0;
+  cursor: pointer;
+  background-image: linear-gradient(45deg, transparent 50%, currentColor 50%), linear-gradient(135deg, currentColor 50%, transparent 50%);
+  background-position: calc(100% - 7px) 50%, calc(100% - 3px) 50%;
+  background-size: 4px 4px, 4px 4px;
+  background-repeat: no-repeat;
+}
+
+.topics {
+  display: flex;
+  gap: 8px 22px;
+  flex-wrap: wrap;
+  padding: 48px 0 20px;
+}
+
+.topic {
+  padding: 0 0 5px;
+  border: 0;
+  border-bottom: 1px solid transparent;
+  background: none;
+  color: #8c877d;
+  cursor: pointer;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 14px;
+  font-style: italic;
+  text-transform: capitalize;
+  transition: color .2s ease, border-color .2s ease;
+}
+
+.topic:hover,
+.topic.active {
+  color: #1c1b18;
+  border-color: #1c1b18;
+}
+
+.quote-stage {
+  align-self: center;
+  width: min(1080px, 88vw);
+  margin: 2vh auto 7vh;
+  position: relative;
+}
+
+.index {
+  position: absolute;
+  top: -34px;
+  left: -58px;
+  font-size: 10px;
+  letter-spacing: .18em;
+  color: #908a80;
+  writing-mode: vertical-rl;
+}
+
+.quote {
+  margin: 0;
+  animation: arrive .55s cubic-bezier(.22,.75,.18,1);
+}
+
+blockquote {
+  margin: 0;
+  max-width: 1040px;
+  font-family: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Palatino, Georgia, serif;
+  font-size: clamp(43px, 6.6vw, 105px);
+  line-height: .98;
+  letter-spacing: -.045em;
+  font-weight: 400;
+  text-wrap: balance;
+}
+
+.translation {
+  margin-top: 28px;
+  max-width: 670px;
+  color: #6d6960;
+  font-family: "Iowan Old Style", Georgia, serif;
+  font-size: clamp(15px, 1.5vw, 21px);
+  line-height: 1.52;
+  font-style: italic;
+}
+
+figcaption {
+  margin-top: 34px;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 9px;
+  color: #6d6960;
+  font-size: 11px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+figcaption .line {
+  width: 45px;
+  height: 1px;
+  background: #1c1b18;
+  margin-right: 3px;
+}
+
+figcaption .author { color: #1c1b18; font-weight: 650; }
+
+figcaption a {
+  color: #777167;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+
+.actions {
+  margin-top: 52px;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.random-button {
+  min-width: 194px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 30px;
+  padding: 15px 17px;
+  border: 1px solid #1c1b18;
+  background: #1c1b18;
+  color: #f1eee6;
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: .12em;
+  font-size: 10px;
+  transition: transform .2s ease, background .2s ease, color .2s ease;
+}
+
+.random-button:hover {
+  transform: translateY(-2px);
+  background: transparent;
+  color: #1c1b18;
+}
+
+.arrow { font-size: 16px; line-height: 1; }
+
+.copy-button {
+  border: 0;
+  border-bottom: 1px solid #aaa59b;
+  padding: 8px 0 5px;
+  background: transparent;
+  color: #6d6960;
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: .12em;
+  font-size: 10px;
+}
+
+footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  color: #8c877d;
+  font-family: Georgia, serif;
+  font-size: 11px;
+  font-style: italic;
+}
+
+@keyframes arrive {
+  from { opacity: 0; transform: translateY(16px); filter: blur(4px); }
+  to { opacity: 1; transform: translateY(0); filter: blur(0); }
+}
+
+@media (max-width: 760px) {
+  .page {
+    padding: 24px 20px 22px;
+  }
+
+  .masthead {
+    align-items: flex-start;
+  }
+
+  .language-control > span {
+    display: none;
+  }
+
+  .topics {
+    padding-top: 38px;
+    gap: 8px 16px;
+  }
+
+  .quote-stage {
+    width: 100%;
+    margin: 7vh 0 9vh;
+  }
+
+  .index { display: none; }
+
+  blockquote {
+    font-size: clamp(39px, 12vw, 68px);
+    line-height: 1.01;
+  }
+
+  .translation {
+    margin-top: 22px;
+    font-size: 16px;
+  }
+
+  figcaption {
+    margin-top: 27px;
+  }
+
+  .actions {
+    margin-top: 39px;
+  }
+
+  footer .footer-note {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: .01ms !important;
+  }
+}
