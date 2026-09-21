@@ -10,10 +10,29 @@ const topicAliases = {
 
 const localFallback = [
   { text: 'To live is the rarest thing in the world. Most people exist, that is all.', author: 'Oscar Wilde', topic: 'life' },
+  { text: 'Life is really simple, but we insist on making it complicated.', author: 'Confucius', topic: 'life' },
+  { text: 'The purpose of our lives is to be happy.', author: 'Dalai Lama', topic: 'life' },
+  { text: 'Life can only be understood backwards; but it must be lived forwards.', author: 'Søren Kierkegaard', topic: 'life' },
+
   { text: 'There is no charm equal to tenderness of heart.', author: 'Jane Austen', topic: 'love' },
+  { text: 'We loved with a love that was more than love.', author: 'Edgar Allan Poe', topic: 'love' },
+  { text: 'Love is composed of a single soul inhabiting two bodies.', author: 'Aristotle', topic: 'love' },
+  { text: 'Where there is love there is life.', author: 'Mahatma Gandhi', topic: 'love' },
+
   { text: 'The only true wisdom is in knowing you know nothing.', author: 'Socrates', topic: 'wisdom' },
+  { text: 'The fool doth think he is wise, but the wise man knows himself to be a fool.', author: 'William Shakespeare', topic: 'wisdom' },
+  { text: 'No man was ever wise by chance.', author: 'Seneca', topic: 'wisdom' },
+  { text: 'Wonder is the beginning of wisdom.', author: 'Socrates', topic: 'wisdom' },
+
   { text: 'Do not go where the path may lead, go instead where there is no path and leave a trail.', author: 'Ralph Waldo Emerson', topic: 'courage' },
+  { text: 'Courage is resistance to fear, mastery of fear—not absence of fear.', author: 'Mark Twain', topic: 'courage' },
+  { text: 'He who is brave is free.', author: 'Seneca', topic: 'courage' },
+  { text: 'Fortune favors the bold.', author: 'Virgil', topic: 'courage' },
+
   { text: 'Never put off till tomorrow what may be done day after tomorrow just as well.', author: 'Mark Twain', topic: 'humor' },
+  { text: 'I can resist everything except temptation.', author: 'Oscar Wilde', topic: 'humor' },
+  { text: 'If you tell the truth, you do not have to remember anything.', author: 'Mark Twain', topic: 'humor' },
+  { text: 'A day without laughter is a day wasted.', author: 'Charlie Chaplin', topic: 'humor' },
 ]
 
 function json(body, status = 200, cache = 'no-store') {
@@ -178,19 +197,28 @@ async function quotable(mode, topic) {
   })
 }
 
-function fallback(mode, topic) {
+function fallback(mode, topic, excludeId = '') {
   const pool = topic === 'all' ? localFallback : localFallback.filter((item) => item.topic === topic)
-  const day = new Date().toISOString().slice(0, 10)
-  const index = mode === 'daily'
-    ? parseInt(hash(`${day}|${topic}`), 36) % pool.length
-    : Math.floor(Math.random() * pool.length)
-  const item = pool[index] ?? localFallback[0]
-  return normalizedQuote({
+  const normalized = pool.map((item) => normalizedQuote({
     ...item,
     source: 'Quote Daily collection',
     sourceUrl: 'https://www.goodreads.com/quotes',
     tags: [item.topic],
     requestedTopic: topic,
+  }))
+  const candidates = mode === 'random' && normalized.length > 1
+    ? normalized.filter((item) => item.id !== excludeId)
+    : normalized
+  const day = new Date().toISOString().slice(0, 10)
+  const index = mode === 'daily'
+    ? parseInt(hash(`${day}|${topic}`), 36) % candidates.length
+    : Math.floor(Math.random() * candidates.length)
+  return candidates[index] ?? normalized[0] ?? normalizedQuote({
+    ...localFallback[0],
+    source: 'Quote Daily collection',
+    sourceUrl: 'https://www.goodreads.com/quotes',
+    tags: [localFallback[0].topic],
+    requestedTopic: 'all',
   })
 }
 
@@ -199,6 +227,7 @@ export default async (request) => {
   const mode = url.searchParams.get('mode') === 'daily' ? 'daily' : 'random'
   const rawTopic = url.searchParams.get('topic') ?? 'all'
   const topic = TOPICS.has(rawTopic) ? rawTopic : 'all'
+  const excludeId = url.searchParams.get('exclude') ?? ''
 
   const providers = mode === 'daily'
     ? [apiNinjas, theySaidSo, zenQuotes, favQs]
@@ -214,6 +243,10 @@ export default async (request) => {
   for (const provider of attempts) {
     try {
       const quote = await provider(mode, topic)
+      if (mode === 'random' && excludeId && quote.id === excludeId) {
+        errors.push(`${quote.source} repeated the current quote`)
+        continue
+      }
       const cache = mode === 'daily'
         ? 'public, max-age=300, s-maxage=21600, stale-while-revalidate=86400'
         : 'no-store'
@@ -223,6 +256,6 @@ export default async (request) => {
     }
   }
 
-  const quote = fallback(mode, topic)
+  const quote = fallback(mode, topic, excludeId)
   return json({ quote, mode, provider: quote.source, fallback: true, errors: process.env.CONTEXT === 'dev' ? errors : undefined })
 }

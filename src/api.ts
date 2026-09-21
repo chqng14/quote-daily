@@ -19,10 +19,14 @@ function randomLocal(topic: Topic, currentId?: string): Quote {
 export async function getQuote(mode: QuoteMode, topic: Topic, currentId?: string): Promise<Quote> {
   try {
     const params = new URLSearchParams({ mode, topic })
+    if (currentId) params.set('exclude', currentId)
     const response = await fetch(`/.netlify/functions/quote?${params.toString()}`)
     if (!response.ok) throw new Error(`Quote API ${response.status}`)
     const payload = await response.json() as { quote?: Quote }
     if (!payload.quote?.text || !payload.quote?.author) throw new Error('Invalid quote response')
+    if (mode === 'random' && currentId && payload.quote.id === currentId) {
+      throw new Error('Quote API repeated the current quote')
+    }
     return payload.quote
   } catch {
     return randomLocal(topic, currentId)

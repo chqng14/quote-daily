@@ -98,7 +98,77 @@ export const quotes: Quote[] = [
       es: 'Nunca dejes para mañana lo que puede hacerse igual de bien pasado mañana.',
       ja: '明後日でも間に合うことを、明日に延ばしてはいけない。',
     },
+  },,
+  {
+    id: 'confucius-simple-life',
+    text: 'Life is really simple, but we insist on making it complicated.',
+    author: 'Confucius',
+    topic: 'life',
+    source: 'Quote Daily collection',
   },
+  {
+    id: 'kierkegaard-life',
+    text: 'Life can only be understood backwards; but it must be lived forwards.',
+    author: 'Søren Kierkegaard',
+    topic: 'life',
+    source: 'Quote Daily collection',
+  },
+  {
+    id: 'poe-love',
+    text: 'We loved with a love that was more than love.',
+    author: 'Edgar Allan Poe',
+    topic: 'love',
+    source: 'Quote Daily collection',
+  },
+  {
+    id: 'gandhi-love',
+    text: 'Where there is love there is life.',
+    author: 'Mahatma Gandhi',
+    topic: 'love',
+    source: 'Quote Daily collection',
+  },
+  {
+    id: 'shakespeare-wise-fool',
+    text: 'The fool doth think he is wise, but the wise man knows himself to be a fool.',
+    author: 'William Shakespeare',
+    topic: 'wisdom',
+    source: 'Quote Daily collection',
+  },
+  {
+    id: 'seneca-wise',
+    text: 'No man was ever wise by chance.',
+    author: 'Seneca',
+    topic: 'wisdom',
+    source: 'Quote Daily collection',
+  },
+  {
+    id: 'twain-courage',
+    text: 'Courage is resistance to fear, mastery of fear—not absence of fear.',
+    author: 'Mark Twain',
+    topic: 'courage',
+    source: 'Quote Daily collection',
+  },
+  {
+    id: 'seneca-brave',
+    text: 'He who is brave is free.',
+    author: 'Seneca',
+    topic: 'courage',
+    source: 'Quote Daily collection',
+  },
+  {
+    id: 'wilde-temptation',
+    text: 'I can resist everything except temptation.',
+    author: 'Oscar Wilde',
+    topic: 'humor',
+    source: 'Quote Daily collection',
+  },
+  {
+    id: 'chaplin-laughter',
+    text: 'A day without laughter is a day wasted.',
+    author: 'Charlie Chaplin',
+    topic: 'humor',
+    source: 'Quote Daily collection',
+  }
 ]
 
 export const topics: Topic[] = ['all', 'life', 'love', 'wisdom', 'courage', 'humor']
